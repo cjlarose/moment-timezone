@@ -114,7 +114,7 @@
 			indices[i] = packBase60(map[key], 0);
 		}
 
-		return abbrs.join(' ') + '|' + offsets.join(' ') + '|' + indices.join('');
+		return { abbrs: abbrs, offsets: offsets, indices: indices };
 	}
 
 	function packPopulation (number) {
@@ -122,11 +122,11 @@
 			return '';
 		}
 		if (number < 1000) {
-			return '|' + number;
+			return '' + number;
 		}
 		var exponent = String(number | 0).length - 2;
 		var precision = Math.round(number / Math.pow(10, exponent));
-		return '|' + precision + 'e' + exponent;
+		return '' + precision + 'e' + exponent;
 	}
 
 	function validatePackData (source) {
@@ -142,13 +142,37 @@
 		}
 	}
 
-	function pack (source) {
-		validatePackData(source);
-		return [
-			source.name,
-			packAbbrsAndOffsets(source),
-			packUntils(source.untils) + packPopulation(source.population)
-		].join('|');
+	function pack (sources) {
+		var result = {
+			names: [],
+			abbrs: [],
+			offsets: [],
+			indices: [],
+			untils: [],
+			populations: []
+		};
+
+		sources.forEach(function(source) {
+			validatePackData(source);
+			result.names.push(source.name);
+
+			var addtlData = packAbbrsAndOffsets(source);
+			result.abbrs.push(addtlData.abbrs);
+			result.offsets.push(addtlData.offsets);
+			result.indices.push(addtlData.indices);
+
+			result.untils.push(packUntils(source.untils));
+			result.populations.push(packPopulation(source.population));
+		});
+
+		result.names = result.names.join('|');
+		result.abbrs = result.abbrs.join('|');
+		result.offsets = result.offsets.join('|');
+		result.indices = result.indices.join('|');
+		result.untils = result.untils.join('|');
+		result.populations = result.populations.join('|');
+
+		return result;
 	}
 
 	/************************************
@@ -295,9 +319,7 @@
 			version : input.version
 		});
 
-		for (i = 0; i < output.zones.length; i++) {
-			output.zones[i] = pack(output.zones[i]);
-		}
+		output.zones = pack(output.zones);
 
 		return output;
 	}

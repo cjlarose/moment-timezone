@@ -9,9 +9,7 @@ module.exports = function (grunt) {
 		var unpacked = grunt.file.readJSON('data/unpacked/' + version + '.json'),
 			output = tz.createLinks(unpacked);
 
-		output.zones = output.zones.map(function (unpacked) {
-			return tz.pack(unpacked);
-		});
+		output.zones = tz.pack(output.zones);
 
 		grunt.file.mkdir('data/packed');
 		grunt.file.write('data/packed/' + version + '.json', JSON.stringify(output, null, '\t'));
